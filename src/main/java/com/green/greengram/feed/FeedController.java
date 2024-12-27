@@ -64,4 +64,26 @@ public class FeedController {
                 .resultData(result)
                 .build();
     }
+
+    @GetMapping("ver4")
+    @Operation(summary = "Feed 리스트 - No N+1", description = "signed_user_id는 로그인한 사용자의 pk")
+    public ResultResponse<List<FeedGetRes>> getFeedList2(@Valid @ParameterObject @ModelAttribute FeedGetReq p) {
+        List<FeedGetRes> list = service.getFeedList2(p);
+        return ResultResponse.<List<FeedGetRes>>builder()
+                .resultMessage(String.format("%d rows", list.size()))
+                .resultData(list)
+                .build();
+    }
+
+    @GetMapping("ver5") // n+1 을 해결하기 위해 원래는 service 에서 for 문 돌리는걸, mybatis 에서 해결하는ㄱ 서
+    @Operation(summary = "Feed 리스트 - No N+1-using MyBatis", description = "signed_user_id는 로그인한 사용자의 pk")
+    public ResultResponse<List<FeedGetRes>> getFeedList5(@Valid @ParameterObject @ModelAttribute FeedGetReq p) {
+        List<FeedGetRes> list = service.getFeedList5(p);
+        return ResultResponse.<List<FeedGetRes>>builder()
+                .resultMessage(String.format("%d rows", list.size()))
+                .resultData(list)
+                .build();
+    }
+
+
 }

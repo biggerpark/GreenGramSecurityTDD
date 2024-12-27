@@ -1,0 +1,9 @@
+file:
+  directory: D:\pjh\GreenGramVer3\greengramver3
+
+spring:
+  datasource:
+    url: jdbc:log4jdbc:mariadb://localhost/greengram_ver3
+    username: root # 선생님이 미리 username 팀장님께 전달함.
+    password: green502
+

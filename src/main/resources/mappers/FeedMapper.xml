@@ -29,6 +29,121 @@
          LIMIT #{startIdx}, #{size}
     </select>
 
+    <select id="selFeedWithPicList">
+<!--        SELECT A.feed_id AS feedId, A.contents, A.location-->
+<!--            , A.created_at AS createdAt-->
+<!--            , B.user_id AS writerUserId-->
+<!--            , IF(B.nick_name IS NULL, B.uid, B.nick_name) AS writerNm-->
+<!--            , B.pic AS writerPic-->
+<!--            , IF(C.feed_id IS NULL, 0, 1) AS isLike-->
+<!--            , d.pic-->
+<!--        FROM feed A-->
+<!--        INNER JOIN user B-->
+<!--        ON A.writer_user_id = B.user_id-->
+<!--        LEFT JOIN feed_like C-->
+<!--            ON A.feed_id = C.feed_id-->
+<!--        AND C.user_id = #{signedUserId}-->
+<!--        <if test=" profileUserId != null ">-->
+<!--            WHERE A.writer_user_id = #{profileUserId}-->
+<!--        </if>-->
+<!--        LEFT JOIN feed_pic d-->
+<!--            ON a.feed_id=d.feed_id-->
+<!--        ORDER BY A.feed_id DESC-->
+<!--        LIMIT #{startIdx}, #{size}-->
+        SELECT T1.*,T2.PIC
+        FROM(
+        SELECT A.feed_id AS feedId, A.contents, A.location
+        , A.created_at AS createdAt
+        , B.user_id AS writerUserId
+        , IF(B.nick_name IS NULL, B.uid, B.nick_name) AS writerNm
+        , B.pic AS writerPic
+        , IF(C.feed_id IS NULL, 0, 1) AS isLike
+
+        FROM feed A
+        INNER JOIN user B
+        ON A.writer_user_id = B.user_id
+        LEFT JOIN feed_like C
+        ON A.feed_id = C.feed_id
+        AND C.user_id = 1
+        LEFT JOIN feed_pic d
+        ON a.feed_id=d.feed_id
+        WHERE a.feed_id=4
+
+        ORDER BY A.feed_id DESC
+        LIMIT #{startIdx},#{size}
+        ) T1
+        INNER JOIN feed_pic T2
+        ON T1.FEEdID=T2.FEED_ID
+
+    </select>
+
+    <resultMap id="feedResultMap" type="com.green.greengram.feed.model.FeedWithPicCommentDto"> <!-- SQL 쿼리 결과를 Java 객체와 매핑하는 규칙을 정의합니다. -->
+        <id property="feedId" column="feedId" /> <!-- property 는 객체의 멤버필드 이름, column 은 쿼리의 컬럼명,id 라고 붙이면 unique 한 값으로 인식 -->
+        <result property="contents" column="contents" />
+        <result property="location" column="location" />
+        <result property="createdAt" column="createdAt" />
+        <result property="writerUserId" column="writerUserId" />
+        <result property="writerNm" column="writerNm" />
+        <result property="writerPic" column="writerPic" />
+        <result property="isLike" column="isLike" />
+        <collection property="pics" resultMap="feedPicResultMap" /> <!-- ResultMap 을 밑에서 정의해줘야한다 -->
+        <collection property="commentList" resultMap="feedCommentResultMap" /> <!-- ResultMap 을 밑에서 정의해줘야한다 -->
+
+    </resultMap>
+
+    <resultMap id="feedPicResultMap" type="String">
+        <result property="pic" column="pic" />
+    </resultMap>
+
+    <resultMap id="feedCommentResultMap" type="com.green.greengram.feed.comment.model.FeedCommentDto">
+        <id property="feedCommentId" column="feed_comment_id" /> <!-- 중복되지 않아야 하는 값은 feedCommentId 이다 -->
+        <result property="comment" column="comment" />
+        <result property="writerUserId" column="commentWriterUserId" />
+        <result property="writerNm" column="commentWriterNm" />
+        <result property="writerPic" column="commentWriterPic" />
+
+    </resultMap>
+
+    <select id="selFeedWithPicAndCommentLimit4List" resultMap="feedResultMap" >
+        SELECT T1.*,T2.PIC,t3.*
+        FROM(
+                SELECT A.feed_id AS feedId, A.contents, A.location
+                , A.created_at AS createdAt
+                , B.user_id AS writerUserId
+                , IF(B.nick_name IS NULL, B.uid, B.nick_name) AS writerNm
+                , B.pic AS writerPic
+                , IF(C.feed_id IS NULL, 0, 1) AS isLike
+                FROM feed A
+                INNER JOIN USER B
+                ON A.writer_user_id = B.user_id
+                LEFT JOIN feed_like C
+                ON A.feed_id = C.feed_id
+                AND C.user_id = #{signedUserId}
+                WHERE a.feed_id=4
+                ORDER BY A.feed_id DESC
+                LIMIT #{startIdx},#{size}
+        ) T1
+        INNER JOIN feed_pic T2
+            ON T1.FEEdID=T2.FEED_ID
+        LEFT JOIN (
+                SELECT a.feed_id,a.feed_comment_id,a.`comment`
+                ,c.user_id AS commentWriterUserId
+                ,if(c.nick_name IS NULL, c.uid,c.nick_name) AS commentWriterNm
+                ,c.pic As commentWriterPic
+                FROM feed_comment a
+                LEFT JOIN feed_comment b
+                ON a.feed_id=b.feed_id
+                AND a.feed_comment_id>b.feed_comment_id
+                INNER JOIN user c
+                ON a.user_id=c.user_id
+                GROUP BY a.feed_id,a.feed_comment_id,a.`COMMENT`
+                HAVING COUNT(a.feed_id)  <![CDATA[ < ]]> 4  <!-- ' <4 ' 라고 적어두면 mybatis 가 < 부호를 인식 못해서 cdata 라고 적어줘야함 -->
+        ) t3
+        ON t1.feedId=t3.feed_id
+    </select>
+
+
+
     <delete id="delFeedLikeAndFeedCommentAndFeedPic">
         DELETE B, C, D
           FROM feed A

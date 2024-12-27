@@ -1,5 +1,8 @@
 package com.green.greengram.common.exception;
 
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.security.SignatureException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -13,7 +16,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,6 +28,26 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<Object> handleException(CustomException e) {
         return handleExceptionInternal(e.getErrorCode());
     }
+
+
+    @ExceptionHandler(SignatureException.class) // 토큰이 오염되었을때
+    public ResponseEntity<Object> handleSignatureException() {
+        return handleExceptionInternal(UserErrorCode.UNAUTHENTICATED);
+    }
+
+
+    @ExceptionHandler(MalformedJwtException.class) // 토큰값이 유효하지 않을때
+    public ResponseEntity<Object> handleMalformedJwtException() {
+        return handleExceptionInternal(UserErrorCode.INVALID_TOKEN);
+    }
+
+
+    @ExceptionHandler(ExpiredJwtException.class) // 토큰이 만료되었을때
+    public ResponseEntity<Object> handleExpiredJwtException() {
+        return handleExceptionInternal(UserErrorCode.EXPIRED_TOKEN);
+    }
+
+
 
     //Validation 예외가 발생되었을 경우 캐치
     @Override

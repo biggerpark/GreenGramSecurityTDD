@@ -1,0 +1,12 @@
+file:
+  directory: D:\pjh\GreenGramTdd\tdd
+
+spring:
+  datasource:
+    url: jdbc:log4jdbc:mariadb://localhost/greengram_ver3_test
+    username: root # 선생님이 미리 username 팀장님께 전달함.
+    password: green502
+  sql:
+    init:
+      mode: always #쿼리문을 리소스에 넣어두면 항상 실행된다. 여기에는 data, schema 파일이 있다.
+

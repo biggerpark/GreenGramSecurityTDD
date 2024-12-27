@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.annotations.ParameterObject;
@@ -25,7 +26,7 @@ public class UserController {
 
     @PostMapping("sign-up")
     @Operation(summary = "회원 가입")
-    public ResultResponse<Integer> signUp(@RequestPart UserSignUpReq p
+    public ResultResponse<Integer> signUp(@Valid @RequestPart UserSignUpReq p
                                         , @RequestPart(required = false) MultipartFile pic) {
         log.info("UserInsReq: {}, file: {}", p, pic != null ? pic.getOriginalFilename() : null);
         int result = service.postSignUp(pic, p);
@@ -35,12 +36,22 @@ public class UserController {
                 .build();
     }
 
+//    @PostMapping("sign-in")
+//    @Operation(summary = "로그인")
+//    public ResultResponse<UserSignInRes> signIn(@RequestBody UserSignInReq p, HttpServletResponse response) {
+//        UserSignInRes res = service.postSignIn(p, response);
+//        return ResultResponse.<UserSignInRes>builder()
+//                .resultMessage(res.getMessage())
+//                .resultData(res)
+//                .build();
+//    }
+
     @PostMapping("sign-in")
     @Operation(summary = "로그인")
-    public ResultResponse<UserSignInRes> signIn(@RequestBody UserSignInReq p, HttpServletResponse response) {
+    public ResultResponse<UserSignInRes> signIn( @RequestBody UserSignInReq p, HttpServletResponse response) {
         UserSignInRes res = service.postSignIn(p, response);
         return ResultResponse.<UserSignInRes>builder()
-                .resultMessage(res.getMessage())
+                .resultMessage("로그인 성공")
                 .resultData(res)
                 .build();
     }

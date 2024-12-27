@@ -2,6 +2,8 @@ package com.green.greengram.user;
 
 import com.green.greengram.common.CookieUtils;
 import com.green.greengram.common.MyFileUtils;
+import com.green.greengram.common.exception.CustomException;
+import com.green.greengram.common.exception.UserErrorCode;
 import com.green.greengram.config.jwt.JwtUser;
 import com.green.greengram.config.jwt.TokenProvider;
 import com.green.greengram.config.security.AuthenticationFacade;
@@ -63,16 +65,21 @@ public class UserService {
 
     public UserSignInRes postSignIn(UserSignInReq p, HttpServletResponse response) {
         UserSignInRes res = mapper.selUserByUid(p.getUid());
-        if( res == null ) { //아이디 없음
-            res = new UserSignInRes();
-            res.setMessage("아이디를 확인해 주세요.");
-            return res;
-        } else if(!passwordEncoder.matches(p.getUpw(), res.getUpw())) { //비밀번호가 다를시
-        //} else if( !BCrypt.checkpw(p.getUpw(), res.getUpw()) ) { //비밀번호가 다를시
-            res = new UserSignInRes();
-            res.setMessage("비밀번호를 확인해 주세요.");
-            return res;
+        if(res==null||!passwordEncoder.matches(p.getUpw(), res.getUpw())) {
+            throw new CustomException(UserErrorCode.INCORRECT_ID_PW); // 우리가 만든 에러를 던져줌
         }
+
+        // 예외처리를 하기 전에는 밑에 보이는 것처럼 처리했어야했다.
+//        if( res == null ) { //아이디 없음
+//            res = new UserSignInRes();
+//            res.setMessage("아이디를 확인해 주세요.");
+//            return res;
+//        } else if(!passwordEncoder.matches(p.getUpw(), res.getUpw())) { //비밀번호가 다를시
+//        //} else if( !BCrypt.checkpw(p.getUpw(), res.getUpw()) ) { //비밀번호가 다를시
+//            res = new UserSignInRes();
+//            res.setMessage("비밀번호를 확인해 주세요.");
+//            return res;
+//        }
 
         /*
         JWT 토큰 생성 2개? AccessToken(20분), RefreshToken(15일)
@@ -84,7 +91,7 @@ public class UserService {
         jwtUser.getRoles().add("ROLE_USER");
         jwtUser.getRoles().add("ROLE_ADMIN");
 
-        String accessToken = tokenProvider.generateToken(jwtUser, Duration.ofMinutes(100));
+        String accessToken = tokenProvider.generateToken(jwtUser, Duration.ofMinutes(5));
         String refreshToken = tokenProvider.generateToken(jwtUser, Duration.ofDays(15));
 
         //refreshToken은 쿠키에 담는다.
@@ -107,7 +114,7 @@ public class UserService {
         log.info("refreshToken: {}", refreshToken);
 
         JwtUser jwtUser = tokenProvider.getJwtUserFromToken(refreshToken);
-        return tokenProvider.generateToken(jwtUser, Duration.ofMinutes(100));
+        return tokenProvider.generateToken(jwtUser, Duration.ofSeconds(30));
     }
 
     public String patchUserPic(UserPicPatchReq p) {
